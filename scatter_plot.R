@@ -95,10 +95,10 @@ scatter_plot <- function(input, output, session, values) {
     text = ~get(input$choice_a3), 
     boxpoints = "all", jitter = 0.7, pointpos = 0, hoverinfo = "text")
     
-    if(!grepl("(mfi|normed)", ignore.case = T, input$choice_a4)){
+    if(!grepl("(mfi|normed|cv)", ignore.case = T, input$choice_a4)){
       p%>%
         add_text(x = ~get(input$choice_a1), y = ~lod, text = "LOD", textposition = "left",marker = list(color = 'rgb(0, 0, 0)', symbol = "arrow-up"))%>% 
-        add_text(x = ~get(input$choice_a1), y = ~hod, text = "LOD", textposition = "left",marker = list(color = 'rgb(0, 0, 0)', symbol = "arrow-down"))%>% 
+        add_text(x = ~get(input$choice_a1), y = ~hod, text = "HOD", textposition = "left",marker = list(color = 'rgb(0, 0, 0)', symbol = "arrow-down"))%>% 
         layout(boxmode = "group", xaxis = list(title = ""))
     }else{
       p%>%

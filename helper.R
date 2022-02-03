@@ -73,10 +73,20 @@ read_lmx <- function(f, lot = "default", analyt_start_row){
     #temp <- read.xlsx(f, sheetIndex = which(sheet.list == x), header = T, startRow = analyt_start_row)
     if(grepl("xls$", f)){
       temp <- read_xls(f, sheet = (2 + which(sheet.list == x)), col_names = T, skip = (analyt_start_row - 1))
+      if("Location" != colnames(temp)[1]){
+        stop("Not able to read analyte tab in the xls file. Go to the 'analyte tab' (usually start from the 3rd tab in the xls. 
+        Identified the header's row number BELOW the standard curve section. Input the row number to the 'Analyte Start Row' input. 
+        'Analyte Start Row' is common across analytes in the same xls file.)")
+      }
       temp <- temp[1: (grep("Note", temp$Location)-2), ]
     }
     if(grepl("xlsx$", f)){
       temp <- read.xlsx(f, sheetIndex = (2 + which(sheet.list == x)), header = T, startRow = analyt_start_row)
+      if("Location" != colnames(temp)[1]){
+        stop("Not able to read analyte tab in the xls file. Go to the 'analyte tab' (usually start from the 3rd tab in the xls. 
+        Identified the header's row number BELOW the standard curve section. Input the row number to the 'Analyte Start Row' input. 
+        'Analyte Start Row' is common across analytes in the same xls file.)")
+      }
       temp <- temp[1: (grep("Note", temp$Location)-1), ]
     }
     

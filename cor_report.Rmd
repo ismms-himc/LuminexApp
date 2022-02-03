@@ -1,0 +1,95 @@
+---
+title: "Correlation Plots"
+output: html_document
+
+params:
+  rp_upload_data: NA
+  rp_combined_meta: NA
+  rp_choice_b0: NA
+  rp_choice_b1: NA
+---
+
+```{r eval = FALSE, echo = FALSE}
+# For PDF output, change the header to have "output: pdf_document".
+#
+# Note that due to an issue in rmarkdown, the default value of a parameter in
+# the header cannot be `NULL`, so I used a default of `NA` for the default value
+# of `n`.
+library(dplyr)
+library(DT)
+library(ggpubr)
+library(patchwork)
+```
+
+
+## Summary of plate level information.
+
+
+```{r, echo=F, message=F, warning=F}
+#common_sample <- intersect(params$rp_upload_data[[params$rp_choice_b0]]$Assay, params$rp_upload_data[[params$rp_choice_b1]]$Assay)
+common_sample <- intersect(params$rp_combined_meta$Sample[params$rp_combined_meta$File == params$rp_choice_b0], 
+                               params$rp_combined_meta$Sample[params$rp_combined_meta$File == params$rp_choice_b1])
+
+common_analyte <- intersect(rownames(params$rp_upload_data[[params$rp_choice_b0]]), rownames(params$rp_upload_data[[params$rp_choice_b1]]))
+
+data_a <- params$rp_upload_data[[params$rp_choice_b0]][match(common_analyte, rownames(params$rp_upload_data[[params$rp_choice_b0]])),
+                                                       match(common_sample, params$rp_combined_meta$Sample[params$rp_combined_meta$File == params$rp_choice_b0])]
+data_b <- params$rp_upload_data[[params$rp_choice_b1]][match(common_analyte, rownames(params$rp_upload_data[[params$rp_choice_b1]])),
+                                                       match(common_sample, params$rp_combined_meta$Sample[params$rp_combined_meta$File == params$rp_choice_b1])]
+
+```
+
+
+```{r, echo=F, message=F, warning=F}
+DT::datatable(
+      data.frame(filename = c(data_a$File[1]%>% unlist(), data_b$File[1]%>% unlist()),
+                 total_common_samples = c(ncol(data_a), ncol(data_b)),
+                 total_common_analyte = c(nrow(data_a), nrow(data_b))),
+      rownames = NULL,
+      options = list(scrollX = TRUE))
+
+```
+
+
+```{r, echo=F, message=F, warning=F, eval=F}
+paste("Total of", nrow(data_a), "Common analytes :")
+
+paste(common_analyte, collapse = ",")
+```
+
+## Correlation of common analytes 
+
+**Dataset A: `r paste(params$rp_choice_b0)`**     
+**Dataset B: `r paste(params$rp_choice_b1)`**     
+
+
+```{r, echo=F, message=F, warning=F, out.width= "100%", results="hide"}
+data_a <- data_a@assays@data$data_imputed
+data_b <- data_b@assays@data$data_imputed
+
+data_a[is.na(data_a)] < 0
+data_b[is.na(data_b)] < 0
+
+rownames(data_a) <- rownames(data_b) <- common_analyte
+
+plot.ls <- lapply(common_analyte, function(x){
+  data.frame(A = data_a[rownames(data_a) == x, ],
+             B = data_b[rownames(data_b) == x, ],
+             Sample = common_sample)%>%
+  ggscatter(x = "A", y = "B", size = 1,
+  add = "reg.line", conf.int = F)+
+  stat_cor(color = "red", size = 2)+
+  labs(title = x)+
+  theme_bw(base_size = 8)
+})
+
+per_panel <- 9
+n_panel <- ceiling(length(plot.ls)/per_panel)
+for (i in 1 : n_panel) {
+  print(
+    wrap_plots(plot.ls[(1 + (i-1) * per_panel) : min(length(plot.ls), (per_panel + (i-1) * per_panel))],
+               ncol = 3, nrow = 3, byrow = T)
+  )
+}
+```
+ 

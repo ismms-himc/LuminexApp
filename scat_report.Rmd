@@ -1,0 +1,158 @@
+---
+title: "Olink Scatter Plots"
+output: html_document
+
+params:
+  rp_upload_data: NA
+  rp_bridging_str: NA
+  rp_combined_data: NA
+  rp_combined_meta: NA
+  rp_choice_a1: NA #x var
+  rp_choice_a2: NA # color 
+  rp_choice_a4: NA # datasets
+---
+
+```{r eval = FALSE, echo = FALSE}
+# For PDF output, change the header to have "output: pdf_document".
+#
+# Note that due to an issue in rmarkdown, the default value of a parameter in
+# the header cannot be `NULL`, so I used a default of `NA` for the default value
+# of `n`.
+library(dplyr)
+library(DT)
+```
+
+
+## Summary of plate level information.
+
+
+```{r, echo=F, message=F, warning=F}
+DT::datatable(
+      data.frame(filename = sapply(params$rp_upload_data, function(x) x$File[1]) %>% unlist(),
+                 total_samples = sapply(params$rp_upload_data, function(x) ncol(x)) %>% unlist(),
+                 total_analyte = sapply(params$rp_upload_data, function(x) nrow(x)) %>% unlist()),
+      rownames = NULL,
+      options = list(scrollX = TRUE))
+```
+ 
+### Reference sample identifier: `r paste(strsplit(params$rp_bridging_str, split = ","), collapse = ",")`
+
+```{r, echo=F, message=F, warning=F}
+# needs sample_id, Plate.ID, in metafile and "lot" only appear once in column names
+
+lapply(strsplit(params$rp_bridging_str, split = ",")%>%unlist(), function(x){
+      bdg_ls <- pull_bdg(params$rp_upload_data, pattern = x)
+      data.frame(filename = names(bdg_ls),
+                 identifier = x,
+                 total_samples = sapply(bdg_ls, function(x) ncol(x)) %>% unlist(),
+                 total_analyte = sapply(bdg_ls, function(x) paste(x$Sample, collapse = ",")) %>% unlist())
+    })%>%
+      do.call(what = "rbind")%>%
+      DT::datatable(rownames = NULL,
+      options = list(scrollX = TRUE))
+
+```
+
+### `r paste("Dataset: ", params$rp_choice_a4)` Plots
+
+**Blue dots indicate LLOD if applicable**  
+**Red dots indicate HLOD if applicable**  
+
+```{r, echo=F, message=F, warning=F, out.width= "100%", results="hide"}
+plot_data <- params$rp_combined_data
+
+if(length(unique(params$rp_combined_meta$File)) > 1){
+      plot_data@elementMetadata$LOD <- NULL
+      plot_data@elementMetadata$HOD <- NULL
+}
+
+lod <- data.frame(analyt = rownames(plot_data),
+                  lapply(names(plot_data@elementMetadata)[grep("(LOD_|LOD)", names(plot_data@elementMetadata))], function(x){
+                    plot_data@elementMetadata[[x]]
+                  })%>%
+                    do.call(what = "cbind")%>%
+                    set_colnames(value = unique(plot_data$File))
+)%>%
+  gather(-analyt, key = "File", value = "lod")%>%
+  mutate(File = gsub("LOD_", "", File),
+         lod = log10(lod))
+
+hod <- data.frame(analyt = rownames(plot_data),
+                  lapply(names(plot_data@elementMetadata)[grep("(HOD_|HOD)", names(plot_data@elementMetadata))], function(x){
+                    plot_data@elementMetadata[[x]]
+                  })%>%
+                    do.call(what = "cbind")%>%
+                    set_colnames(value = unique(plot_data$File))
+)%>%
+  gather(-analyt, key = "File", value = "hod")%>%
+  mutate(File = gsub("HOD_", "", File),
+         hod = log10(hod))
+
+plot.ls <- lapply(rownames(plot_data), function(x){
+  
+  if(!grepl("(mfi|normed|cv)", ignore.case = T, params$rp_choice_a4)){
+    cbind.data.frame(
+      params$rp_combined_meta,
+      log10_scale = plot_data@assays@data[[params$rp_choice_a4]][rownames(plot_data) == x, ]%>%as.numeric()%>%log10()
+      )%>%
+    left_join(
+      data.frame(File = unique(params$rp_combined_meta$File))%>%
+        merge.data.frame(lod)%>%
+        filter(analyt == x)%>%
+        dplyr::select(-analyt),
+      by = "File")%>% 
+    left_join(
+      data.frame(File = unique(params$rp_combined_meta$File))%>%
+        merge.data.frame(hod)%>%
+        filter(analyt == x)%>%
+        dplyr::select(-analyt),
+      by = "File")%>%
+      mutate(File = trim_string_bycommon(File, split = "_"))%>%
+      ggplot()+
+      geom_point(aes_string(params$rp_choice_a1, "log10_scale", color = params$rp_choice_a2),
+                  position = position_jitterdodge(jitter.width = 0.1), shape = 21)+
+      geom_point(aes_string(params$rp_choice_a1, "lod"), shape = 8, color = "blue")+
+      geom_point(aes_string(params$rp_choice_a1, "hod"), shape = 8, color = "red")+
+      labs(x = "", title = x)+
+      theme_bw()+
+      theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 8))
+  }else{
+    cbind.data.frame(
+     params$rp_combined_meta,
+     log10_scale = plot_data@assays@data[[params$rp_choice_a4]][rownames(plot_data) == x, ]%>%as.numeric()%>%log10()
+     )%>%
+     left_join(
+       data.frame(File = unique(params$rp_combined_meta$File))%>%
+         merge.data.frame(lod)%>%
+         filter(analyt == x)%>%
+         dplyr::select(-analyt),
+       by = "File")%>% 
+     left_join(
+       data.frame(File = unique(params$rp_combined_meta$File))%>%
+         merge.data.frame(hod)%>%
+         filter(analyt == x)%>%
+         dplyr::select(-analyt),
+       by = "File")%>%
+       mutate(File = trim_string_bycommon(File, split = "_"))%>%
+       ggplot()+
+       geom_point(aes_string(params$rp_choice_a1, "log10_scale", color = params$rp_choice_a2),
+                   position = position_jitterdodge(jitter.width = 0.1), shape = 21)+
+      labs(x = "", title = x)+
+      theme_bw()+
+      theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 8))
+  }
+  
+})    
+
+
+per_panel <- 6
+n_panel <- ceiling(length(plot.ls)/per_panel)
+
+for (i in 1 : n_panel) {
+  print(
+    wrap_plots(plot.ls[(1 + (i-1) * per_panel) : min(length(plot.ls), (per_panel + (i-1) * per_panel))],
+               ncol = 3, nrow = 2, byrow = T, guides = "collect")& theme(legend.position = 'bottom')
+  )
+}
+```
+

@@ -166,7 +166,7 @@ plot.ls <- lapply(unique(plotdf$analyte), function(x){
              color = "red",
              data = hod %>% filter(analyt == x))+
   labs(title = tit, y = "log Conc.", x = "")+
-  facet_wrap(~File, ncol = 4)+
+  facet_wrap(~File, ncol = 3)+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 8))
 })
@@ -178,13 +178,13 @@ if(length(params$rp_upload_data) > 1){
       )
   }
 }else{
-  per_panel <- 8
+  per_panel <- 6
   n_panel <- ceiling(length(plot.ls)/per_panel)
 
   for (i in 1 : n_panel) {
     print(
       wrap_plots(plot.ls[(1 + (i-1) * per_panel) : min(length(plot.ls), (per_panel + (i-1) * per_panel))],
-                 ncol = 4, nrow = 2, byrow = T, guides = "collect")& theme(legend.position = 'bottom')
+                 ncol = 3, nrow = 2, byrow = T, guides = "collect")& theme(legend.position = 'bottom')
     )
   }
 }

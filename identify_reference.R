@@ -17,10 +17,10 @@ identify_reference_UI <- function(id) {
 # Function for module server logic
 identify_reference <- function(input, output, session, values) {
   
-  observeEvent(input$ref_idf_str,{
-    req(input$ref_idf_str)
-    values$ref_sample_identifier <- input$ref_idf_str
-  })
+  #observeEvent(input$ref_idf_str,{
+  #  req(input$ref_idf_str)
+  #  values$ref_sample_identifier <- input$ref_idf_str
+  #})
   
   output$ref_sample_summary <- DT::renderDT({
     req(input$ref_idf_str)

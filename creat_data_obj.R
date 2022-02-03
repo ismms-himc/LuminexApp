@@ -1,7 +1,7 @@
 # Function for module UI
 creat_data_obj_UI <- function(id) {
   ns <- NS(id)
-  actionButton(ns("creat_data_obj"), "Creat Data Object")
+  actionButton(ns("creat_data_obj"), "Creat Data Object", class = "btn-warning")
 }
 
 

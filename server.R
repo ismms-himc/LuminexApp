@@ -31,7 +31,12 @@ server <- function(input, output, session) {
   
   callModule(module = scatter_plot, id = "id_1", values)
   
+  callModule(module = download_scatter_report, id = "id_1", values)
+  
   callModule(module = pca_plot, id = "id_1", values)
   
   callModule(module = corr_plot, id = "id_1", values)
+  
+  callModule(module = download_cor_report, id = "id_1", values)
+  
 }

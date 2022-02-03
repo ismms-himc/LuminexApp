@@ -4,7 +4,8 @@ library(shinydashboard)
 
 # header
 header <- dashboardHeader(title = "LuminexApp",
-                          tags$li(class = "dropdown", actionButton("browser", "browser"), tags$script("$('#browser').hide();")),
+                          tags$li(class = "dropdown", actionButton("browser", "browser"),
+                                  tags$script("$('#browser').hide();")),
                           dropdownMenuOutput("messageMenu"))
 # sidebar ----
 sidebar <- dashboardSidebar(
@@ -23,9 +24,11 @@ input_file_upload_box <- box(
   fluidRow(
     column(12, h4(icon("circle"), "Accept one or multiple Luminex xls files of the Same Panel."))),
   fluidRow(
-    column(12, h4(icon("circle"), "Open the raw Luminex xls file, view a individual 'Analyte Tab' to identified the 'Analyte Start Row'.
-                    'Analyte Start Row' is common across analytes in the same xls file."))),
+    column(12, h4(p("Open the raw Luminex xls file, view a individual", span("Analyte Tab", style = "color:blue"),"to identified the",
+                    span("Analyte Start Row", style = "color:blue"), "which is the header row number below the standard curve section.
+                    'Analyte Start Row' is common across analytes in the same xls file.")))),
   input_file_upload_UI(id = "id_1"),
+  br(),
   fluidRow(reset_dataset_UI(id = "id_1"))
 )
 
@@ -65,14 +68,17 @@ obj_fun_box <- box(
   status = "info", solidHeader = TRUE, width = 12,
   fluidRow(
     column(12, h4(icon("circle"), "Creat Data Object for Visulization and Download.")),
-    column(12, h4(icon("circle"), "4 dataset will be generated: ")),
+    column(12, h4(div("4 dataset will be generated:", style = "color:blue"))),
     column(12, offset = 1, h4("data_default: the Concentration data, out of range value read as NA")),
     column(12, offset = 1, h4("data_imputed: the Concentration data, out of range value read as Lower or Higher detection limit")),
     column(12, offset = 1, h4("mfi_default: the MFI data")),
+    column(12, offset = 1, h4("cv: cv of the assay replicate")),
     column(12, h4(icon("circle"), "If normalization is done, addational data_default_normed and mfi_normed datasets will be generated."))),
   fluidRow(
     column(4, creat_data_obj_UI(id = "id_1"))),
+  br(),
   fluidRow(
+    column(12, h4(div("Download ONLY AVALIABLE after 'Creat Data Object'!!!", style = "color:red"))),
     column(4, download_qa_report_UI(id = "id_1")),
     column(4, download_combined_data_UI(id = "id_1")))
 )
@@ -81,7 +87,7 @@ obj_fun_box <- box(
 # p1.meta data view or replace box
 meta_view_replace_box <- box(title = "Metadata Setup",
                              collapsible = TRUE,
-                             #collapsed = TRUE,
+                             collapsed = TRUE,
                              status = "primary", solidHeader = TRUE, width = 12,
                              fluidRow(
                                column(12, h4(icon("circle"), "Download metadata for optional user input column, Tiempoint or Sample_Type for example.")),
@@ -97,6 +103,8 @@ scatter_plot_box <- box(title = "Scatter Plot",
                         collapsible = T,
                         collapsed = T,
                         status = "warning", solidHeader = T, width = 12,
+                        fluidRow(column(12, h4(icon("circle"), "Select datasets to setup plots, use 'Download Scatter Plots' to batch download plot for all analytes.")),
+                                 column(12,  download_scatter_report_UI(id = "id_1"))),
                         scatter_plot_UI(id = "id_1")
                         )
 
@@ -118,6 +126,9 @@ corr_plot_box <- box(title = "Correlation Plot--Based on NoneNormalized Data",
                      collapsible = T,
                      collapsed = T,
                      status = "primary", solidHeader = T, width = 12,
+                     fluidRow(column(12, h4(icon("circle"), "Plot is based on the imputated_data (which the Out of Range value is replaced with LLOD or HLOD limit), 
+                                            samples with common names are automatically selected.")),
+                              column(12,  download_cor_report_UI(id = "id_1"))),
                      corr_plot_UI(id = "id_1")
                      )
 
