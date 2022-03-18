@@ -84,39 +84,11 @@ df <- lapply(strsplit(params$rp_ref_idf_str, split = ",")%>%unlist(), function(x
   }
 ```
 
-### Out of Range sample summary 
-
-```{r, echo=F, out.width= "100%", message=F, warning=F}
-cmb <- params$rp_combined_data
-
-query <- trim_string_bycommon(names(params$rp_upload_data), split = "_")
-
-plot.ls <- lapply(1 : length(query), function(x){
-  sub_tit = paste(query[x], "\ntotal sample on plates:\n", ncol(params$rp_upload_data[[x]]))
-
-  data.frame(Sample = params$rp_upload_data[[x]]$Sample,
-                     t(params$rp_upload_data[[x]]@assays@data$data_default))%>%
-  gather(-Sample, key = "analyte", value = "value")%>%
-  group_by(analyte)%>%
-  summarise(out_of_range_count = sum(!is.finite(value)))%>%
-  ggplot(aes(analyte, out_of_range_count))+
-  geom_bar(stat = "identity", alpha = 0.7)+
-  geom_text(aes(label = out_of_range_count))+
-  coord_flip()+
-  labs(subtitle = sub_tit)+
-  theme_bw(base_size = 8)
-})
-
- wrap_plots(plot.ls, ncol = 3)
-```
-
-### Detailed Plots
-
-**Blue line indicate LLOD**       
-**Red line indicate HLOD**     
+### Out of Range sample summary  
 
 
 ```{r, echo=F, out.width= "100%", message=F, warning=F, results="hide"}
+cmb <- params$rp_combined_data
 
 if(length(params$rp_upload_data) > 1){
   cmb@elementMetadata$LOD <- NULL
@@ -149,7 +121,40 @@ plotdf <- data.frame(Sample = cmb$Sample,
   mutate(Type = ifelse(grepl("QC", Sample, ignore.case = T), "QC", "StudySample"))%>%
   gather(-Sample, -Type, -File, key = "analyte", value = "value")%>%
   mutate(File = trim_string_bycommon(File, split = "_"))
+```
 
+
+
+```{r, echo=F, out.width= "100%", message=F, warning=F}
+
+query <- trim_string_bycommon(names(params$rp_upload_data), split = "_")
+
+plot.ls <- lapply(1 : length(query), function(x){
+  # out of range barplot
+  sub_tit = paste(query[x], "\ntotal sample on plates:\n", ncol(params$rp_upload_data[[x]]))
+
+  p1 <- data.frame(Sample = params$rp_upload_data[[x]]$Sample,
+                     t(params$rp_upload_data[[x]]@assays@data$data_default))%>%
+    gather(-Sample, key = "analyte", value = "value")%>%
+    group_by(analyte)%>%
+    summarise(out_of_range_count = sum(!is.finite(value)))%>%
+    ggplot(aes(analyte, out_of_range_count))+
+    geom_bar(stat = "identity", alpha = 0.7)+
+    geom_text(aes(label = out_of_range_count))+
+    coord_flip()+
+    labs(subtitle = sub_tit)+
+    theme_bw(base_size = 8)
+  
+})
+
+wrap_plots(plot.ls, ncol = 1)
+```
+
+### sample distribution plot
+**Blue line indicate LLOD**       
+**Red line indicate HLOD**   
+
+```{r, echo=F, out.width= "100%", message=F, warning=F, results="hide"}
 
 plot.ls <- lapply(unique(plotdf$analyte), function(x){
 
@@ -171,6 +176,7 @@ plot.ls <- lapply(unique(plotdf$analyte), function(x){
   theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 8))
 })
   
+
 if(length(params$rp_upload_data) > 1){
   for(i in 1 : length(plot.ls)){
     print(

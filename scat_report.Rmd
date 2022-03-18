@@ -1,5 +1,5 @@
 ---
-title: "Olink Scatter Plots"
+title: "Scatter Plots"
 output: html_document
 
 params:

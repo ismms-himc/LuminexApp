@@ -5,9 +5,9 @@ account: jiq4001
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5558123
-bundleId: 5539687
+bundleId: 5544363
 url: https://jiq4001.shinyapps.io/LuminexApp/
-when: 1643910625.28355
-lastSyncTime: 1643910625.28356
+when: 1644008906.061
+lastSyncTime: 1644008906.06101
 asMultiple: FALSE
 asStatic: FALSE

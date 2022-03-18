@@ -15,7 +15,7 @@ library(ggpubr)
 library(ggrepel)
 library(patchwork)
 library(shinybusy)
-library(shinyFeedback)
+#library(shinyFeedback)
 library(spsComps)
 
 source("helper.R")
